@@ -1644,6 +1644,7 @@ static int clone_submodule(struct module_clone_data *clone_data)
 	char *sm_alternate = NULL, *error_strategy = NULL;
 	struct strbuf sb = STRBUF_INIT;
 	struct child_process cp = CHILD_PROCESS_INIT;
+	char *to_free = NULL;
 
 	submodule_name_to_gitdir(&sb, the_repository, clone_data->name);
 	sm_gitdir = absolute_pathdup(sb.buf);
@@ -1651,9 +1652,9 @@ static int clone_submodule(struct module_clone_data *clone_data)
 
 	if (!is_absolute_path(clone_data->path)) {
 		strbuf_addf(&sb, "%s/%s", get_git_work_tree(), clone_data->path);
-		clone_data->path = strbuf_detach(&sb, NULL);
+		clone_data->path = to_free = strbuf_detach(&sb, NULL);
 	} else {
-		clone_data->path = xstrdup(clone_data->path);
+		clone_data->path = clone_data->path;
 	}
 
 	if (validate_submodule_git_dir(sm_gitdir, clone_data->name) < 0)
@@ -1737,6 +1738,7 @@ static int clone_submodule(struct module_clone_data *clone_data)
 	strbuf_release(&sb);
 	free(sm_gitdir);
 	free(p);
+	free(to_free);
 	return 0;
 }
 
